@@ -1,6 +1,7 @@
 const Report = require('../models/Report');
 const User = require('../models/User');
 const Evidence = require('../models/Evidence');
+const { sendMail, templates } = require('../config/mailer');
 
 // POST /api/reports  (reporter only)
 const createReport = async (req, res) => {
@@ -25,6 +26,21 @@ const createReport = async (req, res) => {
       details,
       status: 'reported',
     });
+
+    // Send email to student
+    console.log('Looking for student with rollNo:', studentRollNo.toUpperCase());
+    console.log('Student found:', student?.email);
+
+    if (student?.email) {
+      try {
+        console.log('Sending email to:', student.email);
+        const { subject, html } = templates.reportFiled(student.name, report);
+        await sendMail({ to: student.email, subject, html });
+        console.log('Email sent successfully!');
+      } catch (mailErr) {
+        console.error('Email failed:', mailErr.message);
+      }
+    }
 
     res.status(201).json(report);
   } catch (err) {
@@ -91,6 +107,17 @@ const appealReport = async (req, res) => {
     report.appealMessage = appealMessage;
     report.appealStatus = action === 'resubmit' ? 'resubmitted' : 'appealed';
     await report.save();
+
+    // Send email to admin
+    const admins = await User.find({ role: 'admin' });
+    for (const admin of admins) {
+      try {
+        const { subject, html } = templates.appealSubmitted(admin.name, report);
+        await sendMail({ to: admin.email, subject, html });
+      } catch (mailErr) {
+        console.error('Email failed:', mailErr.message);
+      }
+    }
 
     res.json({ message: 'Appeal submitted successfully.', report });
   } catch (err) {
