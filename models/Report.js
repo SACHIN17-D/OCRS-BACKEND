@@ -65,7 +65,8 @@ reportSchema.pre('save', async function (next) {
   if (!this.reportId) {
     const year = new Date().getFullYear();
     const count = await mongoose.model('Report').countDocuments();
-    this.reportId = `RPT-${year}-${String(count + 1).padStart(3, '0')}`;
+    const timestamp = Date.now().toString().slice(-4);
+    this.reportId = `RPT-${year}-${String(count + 1).padStart(3, '0')}-${timestamp}`;
   }
   next();
 });
