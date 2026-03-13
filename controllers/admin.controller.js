@@ -36,14 +36,3 @@ const verifyReport = async (req, res) => {
 };
 
 module.exports = { verifyReport };
-```
-
----
-
-Now add `MAIL_USER` and `MAIL_PASS` to Render environment variables too:
-
-1. Go to **Render** → your backend → **Environment**
-2. Add:
-```
-MAIL_USER = your_gmail@gmail.com
-MAIL_PASS = your_16_digit_app_password
