@@ -1,49 +1,49 @@
 const Evidence = require('../models/Evidence');
 const Report = require('../models/Report');
+const User = require('../models/User');
+const cloudinary = require('../config/cloudinary');
+const { sendMail, templates } = require('../config/mailer');
 
-// POST /api/evidence/:reportId  (student only)
 const uploadEvidence = async (req, res) => {
   try {
     const { reportId } = req.params;
     const { explanation } = req.body;
 
-    if (!req.file) {
-      return res.status(400).json({ message: 'Image file is required.' });
-    }
-    if (!explanation) {
-      return res.status(400).json({ message: 'Explanation is required.' });
-    }
-
-    // Find the report
     const report = await Report.findById(reportId);
-    if (!report) {
-      return res.status(404).json({ message: 'Report not found.' });
-    }
+    if (!report) return res.status(404).json({ message: 'Report not found.' });
 
-    // Make sure only the concerned student can upload
-    if (report.studentRollNo !== req.user.rollNo) {
-      return res.status(403).json({ message: 'You can only upload proof for your own reports.' });
-    }
+    if (!req.file) return res.status(400).json({ message: 'Image is required.' });
 
-    // Only allow if status is 'reported'
-    if (report.status !== 'reported') {
-      return res.status(400).json({ message: 'Proof has already been submitted for this report.' });
-    }
+    // Upload to cloudinary
+    const result = await new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        { folder: 'ocrs_evidence' },
+        (error, result) => {
+          if (error) reject(error);
+          else resolve(result);
+        }
+      );
+      stream.end(req.file.buffer);
+    });
 
-    // Save evidence
     const evidence = await Evidence.create({
       reportId: report._id,
       submittedBy: req.user._id,
-      imageUrl: req.file.path,         // Cloudinary URL
-      imagePublicId: req.file.filename, // Cloudinary public_id
+      imageUrl: result.secure_url,
       explanation,
     });
 
-    // Update report status
-    report.status = 'proof_submitted';
+    report.status = 'under_review';
     await report.save();
 
-    res.status(201).json({ message: 'Proof submitted successfully.', evidence });
+    // Send email to admin
+    const admins = await User.find({ role: 'admin' });
+    for (const admin of admins) {
+      const { subject, html } = templates.proofSubmitted(admin.name, report);
+      await sendMail({ to: admin.email, subject, html });
+    }
+
+    res.status(201).json({ evidence, report });
   } catch (err) {
     res.status(500).json({ message: 'Failed to upload evidence.', error: err.message });
   }

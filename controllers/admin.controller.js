@@ -1,53 +1,49 @@
 const Report = require('../models/Report');
-const Verification = require('../models/Verification');
 const User = require('../models/User');
+const Verification = require('../models/Verification');
+const { sendMail, templates } = require('../config/mailer');
 
-// PUT /api/admin/verify/:reportId  (admin only)
 const verifyReport = async (req, res) => {
   try {
     const { reportId } = req.params;
     const { decision, adminComment } = req.body;
 
-    if (!decision || !['approved', 'rejected'].includes(decision)) {
-      return res.status(400).json({ message: 'Decision must be "approved" or "rejected".' });
-    }
-
     const report = await Report.findById(reportId);
-    if (!report) {
-      return res.status(404).json({ message: 'Report not found.' });
-    }
+    if (!report) return res.status(404).json({ message: 'Report not found.' });
 
-    if (!['proof_submitted', 'under_review'].includes(report.status)) {
-      return res.status(400).json({ message: 'Report is not ready for verification.' });
-    }
-
-    // Update report status
-    report.status = decision === 'approved' ? 'resolved' : 'rejected';
-    report.adminComment = adminComment || '';
+    report.status = decision === 'approve' ? 'resolved' : 'rejected';
+    report.adminComment = adminComment;
     await report.save();
 
-    // Save verification record
     await Verification.create({
       reportId: report._id,
       reviewedBy: req.user._id,
       decision,
-      adminComment: adminComment || '',
+      adminComment,
     });
 
-    res.json({ message: `Report ${decision} successfully.`, report });
+    // Send email to student
+    const student = await User.findOne({ rollNo: report.studentRollNo });
+    if (student?.email) {
+      const { subject, html } = templates.reportResolved(student.name, report);
+      await sendMail({ to: student.email, subject, html });
+    }
+
+    res.json({ message: `Report ${decision === 'approve' ? 'resolved' : 'rejected'} successfully.`, report });
   } catch (err) {
     res.status(500).json({ message: 'Failed to verify report.', error: err.message });
   }
 };
 
-// GET /api/admin/users  (admin only - list all users)
-const getAllUsers = async (req, res) => {
-  try {
-    const users = await User.find().select('-password').sort({ createdAt: -1 });
-    res.json(users);
-  } catch (err) {
-    res.status(500).json({ message: 'Failed to fetch users.', error: err.message });
-  }
-};
+module.exports = { verifyReport };
+```
 
-module.exports = { verifyReport, getAllUsers };
+---
+
+Now add `MAIL_USER` and `MAIL_PASS` to Render environment variables too:
+
+1. Go to **Render** → your backend → **Environment**
+2. Add:
+```
+MAIL_USER = your_gmail@gmail.com
+MAIL_PASS = your_16_digit_app_password
