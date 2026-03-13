@@ -25,8 +25,12 @@ const verifyReport = async (req, res) => {
     // Send email to student
     const student = await User.findOne({ rollNo: report.studentRollNo });
     if (student?.email) {
-      const { subject, html } = templates.reportResolved(student.name, report);
-      await sendMail({ to: student.email, subject, html });
+      try {
+        const { subject, html } = templates.reportResolved(student.name, report);
+        await sendMail({ to: student.email, subject, html });
+      } catch (mailErr) {
+        console.error('Email failed:', mailErr.message);
+      }
     }
 
     res.json({ message: `Report ${decision === 'approve' ? 'resolved' : 'rejected'} successfully.`, report });
@@ -35,4 +39,13 @@ const verifyReport = async (req, res) => {
   }
 };
 
-module.exports = { verifyReport };
+const getStudents = async (req, res) => {
+  try {
+    const students = await User.find({ role: 'student' }).select('-password');
+    res.json(students);
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to fetch students.', error: err.message });
+  }
+};
+
+module.exports = { verifyReport, getStudents };
