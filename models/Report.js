@@ -64,11 +64,10 @@ const reportSchema = new mongoose.Schema({
 reportSchema.pre('save', async function (next) {
   if (!this.reportId) {
     const year = new Date().getFullYear();
-    const count = await mongoose.model('Report').countDocuments();
+    const random = Math.random().toString(36).substring(2, 6).toUpperCase();
     const timestamp = Date.now().toString().slice(-4);
-    this.reportId = `RPT-${year}-${String(count + 1).padStart(3, '0')}-${timestamp}`;
+    this.reportId = `RPT-${year}-${random}-${timestamp}`;
   }
   next();
 });
-
 module.exports = mongoose.model('Report', reportSchema);
