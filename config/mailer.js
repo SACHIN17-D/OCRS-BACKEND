@@ -1,5 +1,7 @@
 const { Resend } = require('resend');
 
+console.log('Resend API Key:', process.env.RESEND_API_KEY ? 'Found' : 'NOT FOUND');
+
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 const sendMail = async ({ to, subject, html }) => {
