@@ -15,8 +15,13 @@ connectDB();
 
 // Middleware
 app.use(cors({
-  origin: '*',
-  credentials: false,
+  origin: [
+    'https://ocrs-frontend.vercel.app',
+    'http://localhost:3000',
+    'http://localhost:3001',
+    'http://localhost:3002',
+  ],
+  credentials: true,
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
