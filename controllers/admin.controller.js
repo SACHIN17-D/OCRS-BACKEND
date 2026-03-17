@@ -1,7 +1,6 @@
 const Report = require('../models/Report');
 const User = require('../models/User');
 const Verification = require('../models/Verification');
-const { sendMail, templates } = require('../config/mailer');
 
 const verifyReport = async (req, res) => {
   try {
@@ -21,17 +20,6 @@ const verifyReport = async (req, res) => {
       decision,
       adminComment,
     });
-
-    // Send email to student
-    const student = await User.findOne({ rollNo: report.studentRollNo });
-    if (student?.email) {
-      try {
-        const { subject, html } = templates.reportResolved(student.name, report);
-        await sendMail({ to: student.email, subject, html });
-      } catch (mailErr) {
-        console.error('Email failed:', mailErr.message);
-      }
-    }
 
     res.json({ message: `Report ${decision === 'approve' ? 'resolved' : 'rejected'} successfully.`, report });
   } catch (err) {

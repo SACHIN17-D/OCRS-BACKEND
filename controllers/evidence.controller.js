@@ -1,8 +1,15 @@
 const Evidence = require('../models/Evidence');
 const Report = require('../models/Report');
-const User = require('../models/User');
-const { cloudinary } = require('../config/cloudinary');
-const { sendMail, templates } = require('../config/mailer');
+const cloudinary = require('cloudinary').v2;
+const multer = require('multer');
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+const upload = multer({ storage: multer.memoryStorage() });
 
 const uploadEvidence = async (req, res) => {
   try {
@@ -14,7 +21,6 @@ const uploadEvidence = async (req, res) => {
 
     if (!req.file) return res.status(400).json({ message: 'Image is required.' });
 
-    // Upload to cloudinary
     const result = await new Promise((resolve, reject) => {
       const stream = cloudinary.uploader.upload_stream(
         { folder: 'ocrs_evidence' },
@@ -36,21 +42,10 @@ const uploadEvidence = async (req, res) => {
     report.status = 'under_review';
     await report.save();
 
-    // Send email to admin
-    try {
-      const admins = await User.find({ role: 'admin' });
-      for (const admin of admins) {
-        const { subject, html } = templates.proofSubmitted(admin.name, report);
-        await sendMail({ to: admin.email, subject, html });
-      }
-    } catch (mailErr) {
-      console.error('Email failed:', mailErr.message);
-    }
-
     res.status(201).json({ evidence, report });
   } catch (err) {
     res.status(500).json({ message: 'Failed to upload evidence.', error: err.message });
   }
 };
 
-module.exports = { uploadEvidence };
+module.exports = { uploadEvidence, upload };
