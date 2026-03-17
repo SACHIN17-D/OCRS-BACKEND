@@ -37,10 +37,14 @@ const uploadEvidence = async (req, res) => {
     await report.save();
 
     // Send email to admin
-    const admins = await User.find({ role: 'admin' });
-    for (const admin of admins) {
-      const { subject, html } = templates.proofSubmitted(admin.name, report);
-      await sendMail({ to: admin.email, subject, html });
+    try {
+      const admins = await User.find({ role: 'admin' });
+      for (const admin of admins) {
+        const { subject, html } = templates.proofSubmitted(admin.name, report);
+        await sendMail({ to: admin.email, subject, html });
+      }
+    } catch (mailErr) {
+      console.error('Email failed:', mailErr.message);
     }
 
     res.status(201).json({ evidence, report });
