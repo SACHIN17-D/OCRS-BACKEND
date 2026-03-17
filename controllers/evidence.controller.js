@@ -1,7 +1,7 @@
 const Evidence = require('../models/Evidence');
 const Report = require('../models/Report');
 const User = require('../models/User');
-const cloudinary = require('../config/cloudinary');
+const { cloudinary } = require('../config/cloudinary');
 const { sendMail, templates } = require('../config/mailer');
 
 const uploadEvidence = async (req, res) => {
