@@ -1,15 +1,12 @@
 const Evidence = require('../models/Evidence');
 const Report = require('../models/Report');
 const cloudinary = require('cloudinary').v2;
-const multer = require('multer');
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
-
-const upload = multer({ storage: multer.memoryStorage() });
 
 const uploadEvidence = async (req, res) => {
   try {
@@ -51,4 +48,4 @@ const uploadEvidence = async (req, res) => {
   }
 };
 
-module.exports = { uploadEvidence, upload };
+module.exports = { uploadEvidence };

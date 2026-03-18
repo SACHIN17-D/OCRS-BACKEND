@@ -24,7 +24,24 @@ const verifyReport = async (req, res) => {
       { upsert: true, new: true }
     );
 
-    res.json({ message: `Report ${decision === 'approve' ? 'resolved' : 'rejected'} successfully.`, report });
+    // If approved → increment student warning
+    if (decision === 'approve') {
+      const student = await User.findOne({ rollNo: report.studentRollNo });
+      if (student) {
+        student.warningCount += 1;
+        if (student.warningCount === 1) student.warningLevel = 'watch';
+        else if (student.warningCount === 2) student.warningLevel = 'risk';
+        else if (student.warningCount === 3) student.warningLevel = 'hod_review';
+        else student.warningLevel = 'principal_review';
+        await student.save();
+        console.log(`Warning added to ${student.name} — Level: ${student.warningLevel}`);
+      }
+    }
+
+    res.json({
+      message: `Report ${decision === 'approve' ? 'resolved' : 'rejected'} successfully.`,
+      report,
+    });
   } catch (err) {
     res.status(500).json({ message: 'Failed to verify report.', error: err.message });
   }
@@ -39,4 +56,15 @@ const getStudents = async (req, res) => {
   }
 };
 
-module.exports = { verifyReport, getStudents };
+const getWarnings = async (req, res) => {
+  try {
+    const students = await User.find({ role: 'student', warningCount: { $gt: 0 } })
+      .select('-password')
+      .sort({ warningCount: -1 });
+    res.json(students);
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to fetch warnings.', error: err.message });
+  }
+};
+
+module.exports = { verifyReport, getStudents, getWarnings };
