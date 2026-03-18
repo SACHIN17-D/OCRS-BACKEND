@@ -14,12 +14,15 @@ const verifyReport = async (req, res) => {
     report.adminComment = adminComment;
     await report.save();
 
-    await Verification.create({
-      reportId: report._id,
-      reviewedBy: req.user._id,
-      decision: decision === 'approve' ? 'approved' : 'rejected',
-      adminComment,
-    });
+    await Verification.findOneAndUpdate(
+      { reportId: report._id },
+      {
+        reviewedBy: req.user._id,
+        decision: decision === 'approve' ? 'approved' : 'rejected',
+        adminComment,
+      },
+      { upsert: true, new: true }
+    );
 
     res.json({ message: `Report ${decision === 'approve' ? 'resolved' : 'rejected'} successfully.`, report });
   } catch (err) {
