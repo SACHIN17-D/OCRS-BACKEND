@@ -17,7 +17,7 @@ const verifyReport = async (req, res) => {
     await Verification.create({
       reportId: report._id,
       reviewedBy: req.user._id,
-      decision,
+      decision: decision === 'approve' ? 'approved' : 'rejected',
       adminComment,
     });
 
