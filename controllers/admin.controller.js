@@ -10,6 +10,13 @@ const verifyReport = async (req, res) => {
     const report = await Report.findById(reportId);
     if (!report) return res.status(404).json({ message: 'Report not found.' });
 
+    // Block if meeting is pending
+    if (report.meetingStatus === 'pending') {
+      return res.status(403).json({
+        message: `This report requires a ${report.escalatedTo.toUpperCase()} meeting first. Meeting must be confirmed before approving.`
+      });
+    }
+
     report.status = decision === 'approve' ? 'resolved' : 'rejected';
     report.adminComment = adminComment;
     await report.save();
@@ -34,11 +41,22 @@ const verifyReport = async (req, res) => {
         else if (student.warningCount === 3) student.warningLevel = 'hod_review';
         else student.warningLevel = 'principal_review';
         await student.save();
-    
-        // Mark warning as issued for this report
+
         report.warningIssued = true;
+
+        // Auto escalate to HOD at 3rd warning
+        if (student.warningCount === 3) {
+          report.escalatedTo = 'hod';
+          report.meetingStatus = 'pending';
+        }
+
+        // Auto escalate to Principal at 4th warning
+        if (student.warningCount >= 4) {
+          report.escalatedTo = 'principal';
+          report.meetingStatus = 'pending';
+        }
+
         await report.save();
-    
         console.log(`Warning added to ${student.name} — Level: ${student.warningLevel}`);
       }
     }

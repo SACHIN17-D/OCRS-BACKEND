@@ -49,6 +49,8 @@ app.use('/api/auth',     require('./routes/auth.routes'));
 app.use('/api/reports',  require('./routes/report.routes'));
 app.use('/api/evidence', require('./routes/evidence.routes'));
 app.use('/api/admin',    require('./routes/admin.routes'));
+app.use('/api/hod',       require('./routes/hod.routes'));
+app.use('/api/principal', require('./routes/principal.routes'));
 
 // Health check
 app.get('/', (req, res) => res.json({ message: '✅ OCRS API is running' }));
