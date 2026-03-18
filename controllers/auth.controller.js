@@ -19,7 +19,7 @@ const login = async (req, res) => {
       user = await User.findOne({ rollNo: rollNo.toUpperCase(), role: 'student' }).select('+password');
     } else {
       if (!email) return res.status(400).json({ message: 'Email is required.' });
-      user = await User.findOne({ email: email.toLowerCase(), role }).select('+password');
+      user = await User.findOne({ email: email.toLowerCase() }).select('+password');
     }
 
     if (!user) {
