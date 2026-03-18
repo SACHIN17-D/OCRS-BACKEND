@@ -32,12 +32,15 @@ const uploadEvidence = async (req, res) => {
       stream.end(req.file.buffer);
     });
 
-    const evidence = await Evidence.create({
-      reportId: report._id,
-      submittedBy: req.user._id,
-      imageUrl: result.secure_url,
-      explanation,
-    });
+    const evidence = await Evidence.findOneAndUpdate(
+      { reportId: report._id },
+      {
+        submittedBy: req.user._id,
+        imageUrl: result.secure_url,
+        explanation,
+      },
+      { upsert: true, new: true }
+    );
 
     report.status = 'under_review';
     await report.save();
