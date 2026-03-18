@@ -27,13 +27,18 @@ const verifyReport = async (req, res) => {
     // If approved → increment student warning
     if (decision === 'approve') {
       const student = await User.findOne({ rollNo: report.studentRollNo });
-      if (student) {
+      if (student && !report.warningIssued) {
         student.warningCount += 1;
         if (student.warningCount === 1) student.warningLevel = 'watch';
         else if (student.warningCount === 2) student.warningLevel = 'risk';
         else if (student.warningCount === 3) student.warningLevel = 'hod_review';
         else student.warningLevel = 'principal_review';
         await student.save();
+    
+        // Mark warning as issued for this report
+        report.warningIssued = true;
+        await report.save();
+    
         console.log(`Warning added to ${student.name} — Level: ${student.warningLevel}`);
       }
     }

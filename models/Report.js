@@ -48,6 +48,10 @@ const reportSchema = new mongoose.Schema({
     enum: ['reported', 'proof_submitted', 'under_review', 'resolved', 'rejected'],
     default: 'reported',
   },
+  warningIssued: {
+    type: Boolean,
+    default: false,
+  },
   adminComment: String,
   appealMessage: {
     type: String,
