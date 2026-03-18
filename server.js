@@ -15,12 +15,19 @@ connectDB();
 
 // Middleware
 app.use(cors({
-  origin: [
-    'https://ocrs-frontend.vercel.app',
-    'http://localhost:3000',
-    'http://localhost:3001',
-    'http://localhost:3002',
-  ],
+  origin: function(origin, callback) {
+    const allowed = [
+      'https://ocrs-frontend.vercel.app',
+      'http://localhost:3000',
+      'http://localhost:3001',
+    ];
+    // Allow all vercel preview URLs
+    if (!origin || allowed.includes(origin) || origin.includes('vercel.app')) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
 }));
 app.use(express.json());
