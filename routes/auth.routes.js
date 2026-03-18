@@ -22,9 +22,9 @@ router.get('/me', protect, getMe);
 // Student self registration
 router.post('/register-student', async (req, res) => {
   try {
-    const { name, rollNo, email } = req.body;
+    const { name, rollNo, email, department } = req.body;
 
-    if (!name || !rollNo || !email) {
+    if (!name || !rollNo || !email || !department) {
       return res.status(400).json({ message: 'All fields are required.' });
     }
 
@@ -46,7 +46,7 @@ router.post('/register-student', async (req, res) => {
       email: email.toLowerCase(),
       password: Math.random().toString(36),
       role: 'student',
-      department: 'Not Assigned',
+      department: department,
     });
 
     res.status(201).json({ message: 'Registration successful!' });
