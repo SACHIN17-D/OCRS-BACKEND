@@ -13,7 +13,6 @@ const login = async (req, res) => {
       return res.status(400).json({ message: 'Password and role are required.' });
     }
 
-    // Find user by email or rollNo
     let user;
     if (role === 'student') {
       if (!rollNo) return res.status(400).json({ message: 'Roll number is required.' });
@@ -83,7 +82,12 @@ const register = async (req, res) => {
 
 // GET /api/auth/me
 const getMe = async (req, res) => {
-  res.json({ user: req.user });
+  try {
+    const user = await User.findById(req.user._id).select('-password');
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error.', error: err.message });
+  }
 };
 
 module.exports = { login, register, getMe };
