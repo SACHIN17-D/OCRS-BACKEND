@@ -108,5 +108,15 @@ const appealReport = async (req, res) => {
     res.status(500).json({ message: 'Failed to submit appeal.', error: err.message });
   }
 };
+const getReporterReports = async (req, res) => {
+  try {
+    const reports = await Report.find({ reportedBy: req.user._id }).sort({ createdAt: -1 });
+    res.json(reports);
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to fetch reports.', error: err.message });
+  }
+};
+
+module.exports = { createReport, getAllReports, getMyReports, appealReport, getReporterReports };
 
 module.exports = { createReport, getAllReports, getMyReports, appealReport };

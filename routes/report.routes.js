@@ -8,5 +8,6 @@ router.post('/',                  protect, allowRoles('reporter'), createReport)
 router.get('/',                   protect, allowRoles('admin'),    getAllReports);
 router.get('/mine',               protect, allowRoles('student'),  getMyReports);
 router.post('/appeal/:reportId',  protect, allowRoles('student'),  appealReport);
+router.get('/mine/reporter', protect, allowRoles('reporter'), getReporterReports);
 
 module.exports = router;
