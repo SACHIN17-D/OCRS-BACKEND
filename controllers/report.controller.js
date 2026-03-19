@@ -25,6 +25,27 @@ const createReport = async (req, res) => {
       status: 'reported',
     });
 
+    // Increment warning when report is filed
+    if (student) {
+      student.warningCount += 1;
+      if (student.warningCount === 1) student.warningLevel = 'watch';
+      else if (student.warningCount === 2) student.warningLevel = 'risk';
+      else if (student.warningCount === 3) {
+        student.warningLevel = 'hod_review';
+        // Auto escalate report to HOD
+        report.escalatedTo = 'hod';
+        report.meetingStatus = 'pending';
+        await report.save();
+      } else {
+        student.warningLevel = 'principal_review';
+        // Auto escalate to Principal
+        report.escalatedTo = 'principal';
+        report.meetingStatus = 'pending';
+        await report.save();
+      }
+      await student.save();
+    }
+
     res.status(201).json(report);
   } catch (err) {
     res.status(500).json({ message: 'Failed to create report.', error: err.message });
