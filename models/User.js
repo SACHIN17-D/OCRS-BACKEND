@@ -36,37 +36,18 @@ const userSchema = new mongoose.Schema({
     type: String,
     trim: true,
   },
-  isActive: {
-    type: Boolean,
-    default: true,
-  },
-  // Warning System
   warningCount: {
     type: Number,
     default: 0,
-  },
-  escalatedTo: {
-    type: String,
-    enum: ['none', 'hod', 'principal'],
-    default: 'none',
-  },
-  meetingStatus: {
-    type: String,
-    enum: ['not_required', 'pending', 'confirmed'],
-    default: 'not_required',
-  },
-  meetingConfirmedBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-  },
-  meetingNotes: {
-    type: String,
-    trim: true,
   },
   warningLevel: {
     type: String,
     enum: ['clean', 'watch', 'risk', 'hod_review', 'principal_review'],
     default: 'clean',
+  },
+  isActive: {
+    type: Boolean,
+    default: true,
   },
 }, { timestamps: true });
 
@@ -80,15 +61,6 @@ userSchema.pre('save', async function (next) {
 // Compare passwords
 userSchema.methods.comparePassword = async function (candidatePassword) {
   return bcrypt.compare(candidatePassword, this.password);
-};
-
-// Auto update warning level based on count
-userSchema.methods.updateWarningLevel = function () {
-  if (this.warningCount === 0) this.warningLevel = 'clean';
-  else if (this.warningCount === 1) this.warningLevel = 'watch';
-  else if (this.warningCount === 2) this.warningLevel = 'risk';
-  else if (this.warningCount === 3) this.warningLevel = 'hod_review';
-  else this.warningLevel = 'principal_review';
 };
 
 module.exports = mongoose.model('User', userSchema);

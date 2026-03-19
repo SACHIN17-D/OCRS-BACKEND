@@ -52,6 +52,24 @@ const reportSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  escalatedTo: {
+    type: String,
+    enum: ['none', 'hod', 'principal'],
+    default: 'none',
+  },
+  meetingStatus: {
+    type: String,
+    enum: ['not_required', 'pending', 'confirmed'],
+    default: 'not_required',
+  },
+  meetingConfirmedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+  },
+  meetingNotes: {
+    type: String,
+    trim: true,
+  },
   adminComment: String,
   appealMessage: {
     type: String,
@@ -74,4 +92,5 @@ reportSchema.pre('save', async function (next) {
   }
   next();
 });
+
 module.exports = mongoose.model('Report', reportSchema);
