@@ -118,5 +118,3 @@ const getReporterReports = async (req, res) => {
 };
 
 module.exports = { createReport, getAllReports, getMyReports, appealReport, getReporterReports };
-
-module.exports = { createReport, getAllReports, getMyReports, appealReport };

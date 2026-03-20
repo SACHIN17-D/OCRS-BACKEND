@@ -2,21 +2,6 @@ const passport = require('passport');
 const { Strategy: GoogleStrategy } = require('passport-google-oauth20');
 const User = require('../models/User');
 
-const detectRole = (email) => {
-  // College email - auto detect
-  if (email.endsWith('@bitsathy.ac.in')) {
-    const localPart = email.split('@')[0];
-    return localPart.includes('.') ? 'student' : 'reporter';
-  }
-
-  // Allowed personal Gmails for testing
-  const allowedReporters = ['sachinmiraclemaker@gmail.com'];
-  if (allowedReporters.includes(email)) return 'reporter';
-
-  // Block everything else
-  return null;
-};
-
 passport.use(new GoogleStrategy({
   clientID: process.env.GOOGLE_CLIENT_ID,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
@@ -24,18 +9,21 @@ passport.use(new GoogleStrategy({
 }, async (accessToken, refreshToken, profile, done) => {
   try {
     const email = profile.emails[0].value.toLowerCase();
-    const role = detectRole(email);
 
-    if (!role) {
-      return done(null, false, { message: 'Unauthorized email.' });
-    }
-
+    // Check if user already exists in DB
     let user = await User.findOne({ email });
 
-    if (!user) {
-      const rollNo = role === 'student'
-        ? email.split('@')[0].toUpperCase()
-        : null;
+    if (user) {
+      // User exists → allow login with their existing role
+      return done(null, user);
+    }
+
+    // New user
+    if (email.endsWith('@bitsathy.ac.in')) {
+      // College email — auto detect role
+      const localPart = email.split('@')[0];
+      const role = localPart.includes('.') ? 'student' : 'reporter';
+      const rollNo = role === 'student' ? localPart.toUpperCase() : null;
 
       user = await User.create({
         name: profile.displayName,
@@ -43,6 +31,15 @@ passport.use(new GoogleStrategy({
         password: Math.random().toString(36),
         role,
         rollNo,
+        department: 'Not Assigned',
+      });
+    } else {
+      // Personal Gmail → create as reporter
+      user = await User.create({
+        name: profile.displayName,
+        email,
+        password: Math.random().toString(36),
+        role: 'reporter',
         department: 'Not Assigned',
       });
     }
