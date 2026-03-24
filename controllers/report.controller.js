@@ -30,20 +30,20 @@ const createReport = async (req, res) => {
       student.warningCount += 1;
       if (student.warningCount === 1) student.warningLevel = 'watch';
       else if (student.warningCount === 2) student.warningLevel = 'risk';
-      else if (student.warningCount === 3) {
-        student.warningLevel = 'hod_review';
-        // Auto escalate report to HOD
-        report.escalatedTo = 'hod';
-        report.meetingStatus = 'pending';
-        await report.save();
-      } else {
-        student.warningLevel = 'principal_review';
-        // Auto escalate to Principal
-        report.escalatedTo = 'principal';
-        report.meetingStatus = 'pending';
-        await report.save();
-      }
+      else if (student.warningCount === 3) student.warningLevel = 'hod_review';
+      else student.warningLevel = 'principal_review';
       await student.save();
+    }
+
+    // Auto escalate based on severity
+    if (severity === 'medium') {
+      report.escalatedTo = 'hod';
+      report.meetingStatus = 'pending';
+      await report.save();
+    } else if (severity === 'high') {
+      report.escalatedTo = 'principal';
+      report.meetingStatus = 'pending';
+      await report.save();
     }
 
     res.status(201).json(report);
@@ -108,6 +108,7 @@ const appealReport = async (req, res) => {
     res.status(500).json({ message: 'Failed to submit appeal.', error: err.message });
   }
 };
+
 const getReporterReports = async (req, res) => {
   try {
     const reports = await Report.find({ reportedBy: req.user._id }).sort({ createdAt: -1 });
@@ -117,4 +118,15 @@ const getReporterReports = async (req, res) => {
   }
 };
 
-module.exports = { createReport, getAllReports, getMyReports, appealReport, getReporterReports };
+const lookupStudent = async (req, res) => {
+  try {
+    const { rollNo } = req.params;
+    const student = await User.findOne({ rollNo: rollNo.toUpperCase(), role: 'student' }).select('-password');
+    if (!student) return res.status(404).json({ message: 'Student not found.' });
+    res.json(student);
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to lookup student.', error: err.message });
+  }
+};
+
+module.exports = { createReport, getAllReports, getMyReports, appealReport, getReporterReports, lookupStudent };
