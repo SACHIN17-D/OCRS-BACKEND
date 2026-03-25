@@ -15,11 +15,14 @@ connectDB();
 
 // Middleware
 app.use(cors({
-  origin: [
-    'http://localhost:3000',
-    'http://localhost:3001',
-    'https://ocrs-frontend.vercel.app'
-  ],
+  origin: function (origin, callback) {
+    // Allow localhost, any vercel.app domain, or no origin (like mobile apps/curl)
+    if (!origin || origin.startsWith('http://localhost') || origin.endsWith('vercel.app')) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
 }));
 
