@@ -11,7 +11,14 @@ const reportSchema = new mongoose.Schema({
     required: true,
   },
   reporterName: String,
-
+  reporterEvidence: {
+  type: String, // Cloudinary URL
+  trim: true,
+},
+reporterEvidenceNote: {
+  type: String,
+  trim: true,
+},
   studentRollNo: {
     type: String,
     required: [true, 'Student Roll No is required'],
