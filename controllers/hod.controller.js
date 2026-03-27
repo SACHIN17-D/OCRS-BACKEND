@@ -1,32 +1,31 @@
 const Report = require('../models/Report');
 const User = require('../models/User');
 
-// GET /api/hod/reports — HOD sees pending meeting reports for their dept
 const getHodReports = async (req, res) => {
   try {
     const hod = await User.findById(req.user._id);
 
-    // Find students in HOD's department with 3rd warning
+    // Get reports escalated to HOD (medium severity) for this dept
     const students = await User.find({
       role: 'student',
       department: hod.department,
-      warningLevel: 'hod_review',
-    });
+    }).select('rollNo');
 
     const rollNos = students.map(s => s.rollNo);
 
     const reports = await Report.find({
-      studentRollNo: { $in: rollNos },
       escalatedTo: 'hod',
+      studentRollNo: { $in: rollNos },
     }).sort({ createdAt: -1 });
 
-    res.json({ reports, students });
+    const studentDetails = await User.find({ rollNo: { $in: rollNos } }).select('-password');
+
+    res.json({ reports, students: studentDetails });
   } catch (err) {
     res.status(500).json({ message: 'Failed to fetch HOD reports.', error: err.message });
   }
 };
 
-// PUT /api/hod/confirm/:reportId — HOD confirms meeting done
 const confirmMeeting = async (req, res) => {
   try {
     const { reportId } = req.params;

@@ -1,20 +1,16 @@
 const Report = require('../models/Report');
 const User = require('../models/User');
 
-// GET /api/principal/reports — Principal sees 4th warning students
 const getPrincipalReports = async (req, res) => {
   try {
-    const students = await User.find({
-      role: 'student',
-      warningLevel: 'principal_review',
-    });
-
-    const rollNos = students.map(s => s.rollNo);
-
+    // Get reports escalated to principal (high severity)
     const reports = await Report.find({
-      studentRollNo: { $in: rollNos },
       escalatedTo: 'principal',
     }).sort({ createdAt: -1 });
+
+    // Get student info for each report
+    const rollNos = [...new Set(reports.map(r => r.studentRollNo))];
+    const students = await User.find({ rollNo: { $in: rollNos } }).select('-password');
 
     res.json({ reports, students });
   } catch (err) {
@@ -22,7 +18,6 @@ const getPrincipalReports = async (req, res) => {
   }
 };
 
-// PUT /api/principal/confirm/:reportId — Principal confirms meeting done
 const confirmMeeting = async (req, res) => {
   try {
     const { reportId } = req.params;

@@ -4,36 +4,13 @@ const Evidence = require('../models/Evidence');
 
 const createReport = async (req, res) => {
   try {
-    const { studentRollNo, category, severity, date, details, reporterEvidenceNote } = req.body;
+    const { studentRollNo, category, severity, date, details } = req.body;
 
     if (!studentRollNo || !category || !date || !details) {
       return res.status(400).json({ message: 'All fields are required.' });
     }
 
     const student = await User.findOne({ rollNo: studentRollNo.toUpperCase(), role: 'student' });
-
-    // Upload image if provided
-    let reporterEvidence = null;
-    if (req.file) {
-      const cloudinary = require('cloudinary').v2;
-      cloudinary.config({
-        cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-        api_key: process.env.CLOUDINARY_API_KEY,
-        api_secret: process.env.CLOUDINARY_API_SECRET,
-      });
-
-      const result = await new Promise((resolve, reject) => {
-        const stream = cloudinary.uploader.upload_stream(
-          { folder: 'ocrs_reporter_evidence' },
-          (error, result) => {
-            if (error) reject(error);
-            else resolve(result);
-          }
-        );
-        stream.end(req.file.buffer);
-      });
-      reporterEvidence = result.secure_url;
-    }
 
     const report = await Report.create({
       reportedBy: req.user._id,
@@ -46,17 +23,33 @@ const createReport = async (req, res) => {
       date,
       details,
       status: 'reported',
-      reporterEvidence,
-      reporterEvidenceNote,
     });
 
     // Increment warning when report is filed
     if (student) {
       student.warningCount += 1;
-      if (student.warningCount === 1) student.warningLevel = 'watch';
-      else if (student.warningCount === 2) student.warningLevel = 'risk';
-      else if (student.warningCount === 3) student.warningLevel = 'hod_review';
-      else student.warningLevel = 'principal_review';
+
+      // Severity overrides count-based level if it escalates higher
+      if (severity === 'high') {
+        student.warningLevel = 'principal_review';
+      } else if (severity === 'medium') {
+        // Upgrade to hod_review, but don't downgrade if already at principal_review
+        if (student.warningLevel !== 'principal_review') {
+          student.warningLevel = 'hod_review';
+        }
+      } else {
+        // Low severity: assign level by count only if not already at a higher level
+        const countLevel =
+          student.warningCount === 1 ? 'watch' :
+          student.warningCount === 2 ? 'risk' :
+          student.warningCount === 3 ? 'hod_review' : 'principal_review';
+
+        const levelOrder = ['clean', 'watch', 'risk', 'hod_review', 'principal_review'];
+        const currentIdx = levelOrder.indexOf(student.warningLevel);
+        const newIdx = levelOrder.indexOf(countLevel);
+        if (newIdx > currentIdx) student.warningLevel = countLevel;
+      }
+
       await student.save();
     }
 

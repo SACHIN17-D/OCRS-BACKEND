@@ -5,23 +5,21 @@ const evidenceSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Report',
     required: true,
-    unique: true, // one evidence per report
+    unique: true,
   },
-  submittedBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true,
-  },
-  imageUrl: {
-    type: String,
-    required: true,
-  },
-  imagePublicId: String, // for cloudinary deletion if needed
-  explanation: {
-    type: String,
-    required: [true, 'Explanation is required'],
-    trim: true,
-  },
+  // Reporter's proof
+  reporterImageUrl: { type: String },
+  reporterExplanation: { type: String },
+  reporterSubmittedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+
+  // Student's proof
+  studentImageUrl: { type: String },
+  studentExplanation: { type: String },
+  submittedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+
+  // Keep old fields for backward compatibility
+  imageUrl: { type: String },
+  explanation: { type: String },
 }, { timestamps: true });
 
 module.exports = mongoose.model('Evidence', evidenceSchema);

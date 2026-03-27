@@ -49,7 +49,6 @@ const login = async (req, res) => {
   }
 };
 
-// POST /api/auth/register  (admin only creates users)
 const register = async (req, res) => {
   try {
     const { name, email, rollNo, password, role, department } = req.body;
@@ -80,7 +79,6 @@ const register = async (req, res) => {
   }
 };
 
-// GET /api/auth/me
 const getMe = async (req, res) => {
   try {
     const user = await User.findById(req.user._id).select('-password');

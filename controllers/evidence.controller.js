@@ -11,7 +11,8 @@ cloudinary.config({
 const uploadEvidence = async (req, res) => {
   try {
     const { reportId } = req.params;
-    const { explanation } = req.body;
+    const { explanation, submittedAs } = req.body;
+    // submittedAs: 'reporter' or 'student'
 
     const report = await Report.findById(reportId);
     if (!report) return res.status(404).json({ message: 'Report not found.' });
@@ -29,18 +30,32 @@ const uploadEvidence = async (req, res) => {
       stream.end(req.file.buffer);
     });
 
-    const evidence = await Evidence.findOneAndUpdate(
-      { reportId: report._id },
-      {
+    let updateFields = {};
+
+    if (submittedAs === 'reporter') {
+      updateFields = {
+        reporterImageUrl: result.secure_url,
+        reporterExplanation: explanation,
+        reporterSubmittedBy: req.user._id,
+      };
+    } else {
+      // Student proof
+      updateFields = {
+        studentImageUrl: result.secure_url,
+        studentExplanation: explanation,
         submittedBy: req.user._id,
         imageUrl: result.secure_url,
-        explanation,
-      },
+        explanation: explanation,
+      };
+      report.status = 'under_review';
+      await report.save();
+    }
+
+    const evidence = await Evidence.findOneAndUpdate(
+      { reportId: report._id },
+      updateFields,
       { upsert: true, new: true }
     );
-
-    report.status = 'under_review';
-    await report.save();
 
     res.status(201).json({ evidence, report });
   } catch (err) {
