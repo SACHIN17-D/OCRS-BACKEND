@@ -19,24 +19,6 @@ const verifyReport = async (req, res) => {
     report.status = decision === 'approve' ? 'resolved' : 'rejected';
     report.adminComment = adminComment;
 
-    // Tiered approval: Admin can only approve 1st and 2nd warnings
-    // 3rd warning → HOD must approve; 4th+ → Principal must approve
-    if (decision === 'approve' && report.studentRef) {
-      const student = await User.findById(report.studentRef);
-      if (student) {
-        if (student.warningCount >= 4) {
-          return res.status(403).json({
-            message: `This student has ${student.warningCount} warnings. Reports at this level must be approved by the Principal.`,
-          });
-        }
-        if (student.warningCount === 3) {
-          return res.status(403).json({
-            message: `This student has ${student.warningCount} warnings. Reports at this level must be approved by the HOD.`,
-          });
-        }
-      }
-    }
-
     // Update student warning count/level based on decision
     if (report.studentRef) {
       const student = await User.findById(report.studentRef);
