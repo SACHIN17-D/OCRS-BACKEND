@@ -18,6 +18,49 @@ const verifyReport = async (req, res) => {
 
     report.status = decision === 'approve' ? 'resolved' : 'rejected';
     report.adminComment = adminComment;
+
+    // Update student warning count/level based on decision
+    if (report.studentRef) {
+      const student = await User.findById(report.studentRef);
+      if (student) {
+        if (decision === 'approve') {
+          // Warning is formally confirmed — mark it on the report
+          report.warningIssued = true;
+        } else {
+          // Report rejected — decrement warning that was added on creation
+          if (!report.warningIssued && student.warningCount > 0) {
+            student.warningCount = Math.max(0, student.warningCount - 1);
+          }
+        }
+
+        // Recalculate warningLevel based on remaining active (approved) reports
+        const levelOrder = ['clean', 'watch', 'risk', 'hod_review', 'principal_review'];
+        const count = student.warningCount;
+
+        let newLevel;
+        if (count === 0) {
+          newLevel = 'clean';
+        } else if (count === 1) {
+          newLevel = 'watch';
+        } else if (count === 2) {
+          newLevel = 'risk';
+        } else if (count === 3) {
+          newLevel = 'hod_review';
+        } else {
+          newLevel = 'principal_review';
+        }
+
+        // Don't downgrade if the current level was set by a high-severity approved report
+        const currentIdx = levelOrder.indexOf(student.warningLevel);
+        const newIdx = levelOrder.indexOf(newLevel);
+        if (decision === 'reject' || newIdx > currentIdx) {
+          student.warningLevel = newLevel;
+        }
+
+        await student.save();
+      }
+    }
+
     await report.save();
 
     await Verification.findOneAndUpdate(
