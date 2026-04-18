@@ -1,18 +1,15 @@
-const { Resend } = require('resend');
+const nodemailer = require('nodemailer');
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
 
 /**
  * Send an email notification to a student when a report is filed against them.
- * @param {Object} params
- * @param {string} params.studentEmail
- * @param {string} params.studentName
- * @param {string} params.reportId
- * @param {string} params.category
- * @param {string} params.severity
- * @param {string} params.date
- * @param {string} params.details
- * @param {string} params.reporterName
  */
 const sendReportFiledEmail = async ({
   studentEmail,
@@ -46,19 +43,13 @@ const sendReportFiledEmail = async ({
             <!-- Header -->
             <tr>
               <td style="background:linear-gradient(135deg,#0a1f3c,#0d2a4a);padding:32px 40px;border-bottom:1px solid rgba(0,210,255,0.1);">
-                <table width="100%" cellpadding="0" cellspacing="0">
-                  <tr>
-                    <td>
-                      <div style="display:inline-block;background:linear-gradient(135deg,#00d2ff,#0066ff);border-radius:10px;width:40px;height:40px;text-align:center;line-height:40px;font-size:20px;">📋</div>
-                      <span style="font-size:20px;font-weight:700;color:#e8f4ff;vertical-align:middle;margin-left:12px;">OCRS</span>
-                      <span style="font-size:20px;color:#00d2ff;vertical-align:middle;">.</span>
-                    </td>
-                  </tr>
-                </table>
-                <h1 style="margin:20px 0 4px;font-size:24px;font-weight:700;color:#e8f4ff;">
-                  ⚠️ Disciplinary Report Filed
+                <h1 style="margin:0 0 6px;font-size:22px;font-weight:700;color:#e8f4ff;">
+                  📋 OCRS — BITSathy
                 </h1>
-                <p style="margin:0;font-size:14px;color:#8aacc8;">
+                <h2 style="margin:16px 0 4px;font-size:20px;font-weight:700;color:#e8f4ff;">
+                  ⚠️ Disciplinary Report Filed
+                </h2>
+                <p style="margin:0;font-size:13px;color:#8aacc8;">
                   A compliance report has been filed against you. Please log in to review and respond.
                 </p>
               </td>
@@ -67,44 +58,50 @@ const sendReportFiledEmail = async ({
             <!-- Body -->
             <tr>
               <td style="padding:32px 40px;">
-
-                <p style="font-size:15px;color:#c8dff0;margin:0 0 24px;">
+                <p style="font-size:15px;color:#c8dff0;margin:0 0 20px;">
                   Dear <strong style="color:#e8f4ff;">${studentName}</strong>,
                 </p>
-
                 <p style="font-size:14px;color:#8aacc8;margin:0 0 24px;line-height:1.7;">
-                  This is to inform you that a disciplinary report has been filed against you on the
-                  Online Compliance Reporting System (OCRS). Please log in to your student dashboard
-                  to view the full details and submit your proof within the stipulated time.
+                  A disciplinary report has been filed against you on the Online Compliance Reporting
+                  System. Please log in to your student dashboard to view the full details and
+                  submit your proof within the stipulated time.
                 </p>
 
-                <!-- Report Details Card -->
+                <!-- Report Details -->
                 <table width="100%" cellpadding="0" cellspacing="0"
-                  style="background:#0a1628;border:1px solid rgba(0,210,255,0.12);border-radius:12px;margin-bottom:24px;">
+                  style="background:#0a1628;border:1px solid rgba(0,210,255,0.12);border-radius:12px;margin-bottom:20px;">
                   <tr>
                     <td style="padding:20px 24px;">
-                      <p style="margin:0 0 16px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#4a7a9b;">
+                      <p style="margin:0 0 14px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#4a7a9b;">
                         Report Details
                       </p>
                       <table width="100%" cellpadding="0" cellspacing="0">
-                        ${[
-                          ['Report ID', reportId],
-                          ['Category', category],
-                          ['Severity', `<span style="color:${severityColor};font-weight:700;">${severityLabel}</span>`],
-                          ['Incident Date', formattedDate],
-                          ['Reported By', reporterName],
-                        ].map(([label, value]) => `
-                          <tr>
-                            <td style="padding:6px 0;font-size:12px;color:#4a7a9b;width:130px;">${label}</td>
-                            <td style="padding:6px 0;font-size:13px;color:#c8dff0;font-weight:500;">${value}</td>
-                          </tr>
-                        `).join('')}
+                        <tr>
+                          <td style="padding:5px 0;font-size:12px;color:#4a7a9b;width:130px;">Report ID</td>
+                          <td style="padding:5px 0;font-size:13px;color:#00d2ff;font-weight:700;">${reportId}</td>
+                        </tr>
+                        <tr>
+                          <td style="padding:5px 0;font-size:12px;color:#4a7a9b;">Category</td>
+                          <td style="padding:5px 0;font-size:13px;color:#c8dff0;font-weight:500;">${category}</td>
+                        </tr>
+                        <tr>
+                          <td style="padding:5px 0;font-size:12px;color:#4a7a9b;">Severity</td>
+                          <td style="padding:5px 0;font-size:13px;font-weight:700;color:${severityColor};">${severityLabel}</td>
+                        </tr>
+                        <tr>
+                          <td style="padding:5px 0;font-size:12px;color:#4a7a9b;">Incident Date</td>
+                          <td style="padding:5px 0;font-size:13px;color:#c8dff0;font-weight:500;">${formattedDate}</td>
+                        </tr>
+                        <tr>
+                          <td style="padding:5px 0;font-size:12px;color:#4a7a9b;">Reported By</td>
+                          <td style="padding:5px 0;font-size:13px;color:#c8dff0;font-weight:500;">${reporterName}</td>
+                        </tr>
                       </table>
                     </td>
                   </tr>
                 </table>
 
-                <!-- Incident Summary -->
+                <!-- Incident Description -->
                 <table width="100%" cellpadding="0" cellspacing="0"
                   style="background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.2);border-radius:10px;margin-bottom:28px;">
                   <tr>
@@ -117,14 +114,14 @@ const sendReportFiledEmail = async ({
                   </tr>
                 </table>
 
-                <!-- CTA Button -->
+                <!-- CTA -->
                 <table width="100%" cellpadding="0" cellspacing="0">
                   <tr>
-                    <td align="center" style="padding-bottom:28px;">
+                    <td align="center" style="padding-bottom:24px;">
                       <a href="${process.env.FRONTEND_URL}/student"
                         style="display:inline-block;background:linear-gradient(135deg,#00d2ff,#0066ff);
                                color:#fff;text-decoration:none;font-size:14px;font-weight:700;
-                               padding:14px 36px;border-radius:10px;letter-spacing:0.03em;">
+                               padding:14px 36px;border-radius:10px;">
                         📂 View Report &amp; Upload Proof
                       </a>
                     </td>
@@ -132,11 +129,10 @@ const sendReportFiledEmail = async ({
                 </table>
 
                 <p style="font-size:13px;color:#8aacc8;line-height:1.7;margin:0;">
-                  If you believe this report is incorrect, you will be able to upload evidence and
-                  submit an appeal through your dashboard. Failure to respond in a timely manner may
-                  result in further disciplinary action.
+                  If you believe this report is incorrect, you can upload evidence and submit an
+                  appeal through your dashboard. Failure to respond in time may result in further
+                  disciplinary action.
                 </p>
-
               </td>
             </tr>
 
@@ -145,7 +141,7 @@ const sendReportFiledEmail = async ({
               <td style="padding:20px 40px;background:#071220;border-top:1px solid rgba(0,210,255,0.08);">
                 <p style="margin:0;font-size:11px;color:#3a5a78;text-align:center;">
                   This is an automated message from OCRS – BITSathy Online Compliance Reporting System.<br/>
-                  Please do not reply to this email.
+                  Please do not reply to this email. For help, contact the admin.
                 </p>
               </td>
             </tr>
@@ -159,15 +155,14 @@ const sendReportFiledEmail = async ({
   `;
 
   try {
-    await resend.emails.send({
-      from: 'OCRS BITSathy <onboarding@resend.dev>',
+    await transporter.sendMail({
+      from: `"OCRS BITSathy" <${process.env.EMAIL_USER}>`,
       to: studentEmail,
       subject: `⚠️ Disciplinary Report Filed — ${reportId}`,
       html,
     });
-    console.log(`[Mailer] Report notification sent to ${studentEmail}`);
+    console.log(`[Mailer] Email sent to ${studentEmail}`);
   } catch (err) {
-    // Don't crash the request if email fails — just log it
     console.error('[Mailer] Failed to send email:', err.message);
   }
 };
