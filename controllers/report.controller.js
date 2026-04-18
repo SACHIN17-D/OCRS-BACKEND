@@ -1,6 +1,7 @@
 const Report = require('../models/Report');
 const User = require('../models/User');
 const Evidence = require('../models/Evidence');
+const { sendReportFiledEmail } = require('../utils/mailer');
 
 const createReport = async (req, res) => {
   try {
@@ -62,6 +63,20 @@ const createReport = async (req, res) => {
       report.escalatedTo = 'principal';
       report.meetingStatus = 'pending';
       await report.save();
+    }
+
+    // Send email notification to student (fire-and-forget — won't break the request)
+    if (student?.email) {
+      sendReportFiledEmail({
+        studentEmail: student.email,
+        studentName: student.name,
+        reportId: report.reportId,
+        category: report.category,
+        severity: report.severity,
+        date: report.date,
+        details: report.details,
+        reporterName: req.user.name,
+      });
     }
 
     res.status(201).json(report);
