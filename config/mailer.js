@@ -7,7 +7,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 const sendMail = async ({ to, subject, html }) => {
   try {
     await resend.emails.send({
-      from: 'OCRS BITSathy <onboarding@resend.dev>',
+      from: 'OCRS <onboarding@resend.dev>',
       to,
       subject,
       html,
@@ -39,7 +39,7 @@ const reportFiled = (studentName, report) => ({
     <div style="text-align:center;margin:24px 0;">
       <a href="https://ocrs-frontend.vercel.app" style="background:#c0392b;color:white;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:bold;">View Report</a>
     </div>
-    <p style="color:#aaa;font-size:12px;text-align:center;">OCRS - BITSathy Disciplinary Portal</p>
+    <p style="color:#aaa;font-size:12px;text-align:center;">OCRS  Disciplinary Portal</p>
   </div>`,
 });
 
@@ -55,7 +55,7 @@ const reportResolved = (studentName, report) => ({
     <div style="text-align:center;margin:24px 0;">
       <a href="https://ocrs-frontend.vercel.app" style="background:#c0392b;color:white;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:bold;">View Details</a>
     </div>
-    <p style="color:#aaa;font-size:12px;text-align:center;">OCRS - BITSathy Disciplinary Portal</p>
+    <p style="color:#aaa;font-size:12px;text-align:center;">OCRS -  Disciplinary Portal</p>
   </div>`,
 });
 
@@ -70,7 +70,7 @@ const proofSubmitted = (adminName, report) => ({
     <div style="text-align:center;margin:24px 0;">
       <a href="https://ocrs-frontend.vercel.app" style="background:#1d4ed8;color:white;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:bold;">Review Now</a>
     </div>
-    <p style="color:#aaa;font-size:12px;text-align:center;">OCRS - BITSathy Disciplinary Portal</p>
+    <p style="color:#aaa;font-size:12px;text-align:center;">OCRS - Disciplinary Portal</p>
   </div>`,
 });
 
@@ -89,7 +89,7 @@ const appealSubmitted = (adminName, report) => ({
     <div style="text-align:center;margin:24px 0;">
       <a href="https://ocrs-frontend.vercel.app" style="background:#d97706;color:white;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:bold;">Review Appeal</a>
     </div>
-    <p style="color:#aaa;font-size:12px;text-align:center;">OCRS - BITSathy Disciplinary Portal</p>
+    <p style="color:#aaa;font-size:12px;text-align:center;">OCRS - Disciplinary Portal</p>
   </div>`,
 });
 
