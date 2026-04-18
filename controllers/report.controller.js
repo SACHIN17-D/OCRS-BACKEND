@@ -30,37 +30,26 @@ const createReport = async (req, res) => {
     if (student) {
       student.warningCount += 1;
 
-      // Severity overrides count-based level if it escalates higher
-      if (severity === 'high') {
-        student.warningLevel = 'principal_review';
-      } else if (severity === 'medium') {
-        // Upgrade to hod_review, but don't downgrade if already at principal_review
-        if (student.warningLevel !== 'principal_review') {
-          student.warningLevel = 'hod_review';
-        }
-      } else {
-        // Low severity: assign level by count only if not already at a higher level
-        const countLevel =
-          student.warningCount === 1 ? 'watch' :
-          student.warningCount === 2 ? 'risk' :
-          student.warningCount === 3 ? 'hod_review' : 'principal_review';
+      // Assign warning level strictly by warningCount
+      const countLevel =
+        student.warningCount === 1 ? 'watch' :
+        student.warningCount === 2 ? 'risk' :
+        student.warningCount === 3 ? 'hod_review' : 'principal_review';
 
-        const levelOrder = ['clean', 'watch', 'risk', 'hod_review', 'principal_review'];
-        const currentIdx = levelOrder.indexOf(student.warningLevel);
-        const newIdx = levelOrder.indexOf(countLevel);
-        if (newIdx > currentIdx) student.warningLevel = countLevel;
-      }
+      student.warningLevel = countLevel;
 
       await student.save();
     }
 
-    // Auto escalate based on severity
-    if (severity === 'medium') {
-      report.escalatedTo = 'hod';
+    // Escalate based on warning count
+    const currentCount = student ? student.warningCount : 0;
+    
+    if (currentCount >= 4) {
+      report.escalatedTo = 'principal';
       report.meetingStatus = 'pending';
       await report.save();
-    } else if (severity === 'high') {
-      report.escalatedTo = 'principal';
+    } else if (currentCount === 3) {
+      report.escalatedTo = 'hod';
       report.meetingStatus = 'pending';
       await report.save();
     }
