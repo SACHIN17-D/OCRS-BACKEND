@@ -14,6 +14,10 @@ passport.use(new GoogleStrategy({
     let user = await User.findOne({ email });
 
     if (user) {
+      // Check if account is deactivated
+      if (!user.isActive) {
+        return done(null, false, { message: 'deactivated' });
+      }
       // User exists → allow login with their existing role
       return done(null, user);
     }

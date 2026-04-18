@@ -62,22 +62,31 @@ router.get('/google', passport.authenticate('google', {
 }));
 
 router.get('/google/callback',
-  passport.authenticate('google', {
-    failureRedirect: `${process.env.FRONTEND_URL}/login?error=unauthorized`,
-    session: false,
-  }),
-  (req, res) => {
-    const token = generateToken(req.user._id);
-    const user = {
-      id: req.user._id,
-      name: req.user.name,
-      email: req.user.email,
-      rollNo: req.user.rollNo,
-      role: req.user.role,
-      department: req.user.department,
-    };
-    const userData = encodeURIComponent(JSON.stringify(user));
-    res.redirect(`${process.env.FRONTEND_URL}/auth/callback?token=${token}&user=${userData}`);
+  (req, res, next) => {
+    passport.authenticate('google', { session: false }, (err, user, info) => {
+      if (err) return next(err);
+
+      // Account is deactivated
+      if (!user && info?.message === 'deactivated') {
+        return res.redirect(`${process.env.FRONTEND_URL}/login?error=deactivated`);
+      }
+
+      // Any other OAuth failure (email not allowed, etc.)
+      if (!user) {
+        return res.redirect(`${process.env.FRONTEND_URL}/login?error=unauthorized`);
+      }
+
+      const token = generateToken(user._id);
+      const userData = encodeURIComponent(JSON.stringify({
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        rollNo: user.rollNo,
+        role: user.role,
+        department: user.department,
+      }));
+      res.redirect(`${process.env.FRONTEND_URL}/auth/callback?token=${token}&user=${userData}`);
+    })(req, res, next);
   }
 );
 
