@@ -40,11 +40,6 @@ const userSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
-  warningLevel: {
-    type: String,
-    enum: ['clean', 'watch', 'risk', 'hod_review', 'principal_review'],
-    default: 'clean',
-  },
   isActive: {
     type: Boolean,
     default: true,

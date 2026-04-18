@@ -30,20 +30,12 @@ const createReport = async (req, res) => {
     if (student) {
       student.warningCount += 1;
 
-      // Assign warning level strictly by warningCount
-      const countLevel =
-        student.warningCount === 1 ? 'watch' :
-        student.warningCount === 2 ? 'risk' :
-        student.warningCount === 3 ? 'hod_review' : 'principal_review';
-
-      student.warningLevel = countLevel;
-
       await student.save();
     }
 
     // Escalate based on warning count
     const currentCount = student ? student.warningCount : 0;
-    
+
     if (currentCount >= 4) {
       report.escalatedTo = 'principal';
       report.meetingStatus = 'pending';

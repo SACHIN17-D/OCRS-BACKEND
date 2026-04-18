@@ -33,22 +33,6 @@ const verifyReport = async (req, res) => {
           }
         }
 
-        // Recalculate warningLevel based on remaining count
-        const levelOrder = ['clean', 'watch', 'risk', 'hod_review', 'principal_review'];
-        const count = student.warningCount;
-        let newLevel;
-        if (count === 0) newLevel = 'clean';
-        else if (count === 1) newLevel = 'watch';
-        else if (count === 2) newLevel = 'risk';
-        else if (count === 3) newLevel = 'hod_review';
-        else newLevel = 'principal_review';
-
-        const currentIdx = levelOrder.indexOf(student.warningLevel);
-        const newIdx = levelOrder.indexOf(newLevel);
-        if (decision === 'reject' || newIdx > currentIdx) {
-          student.warningLevel = newLevel;
-        }
-
         await student.save();
       }
     }
@@ -181,7 +165,6 @@ const resetWarning = async (req, res) => {
     if (!user) return res.status(404).json({ message: 'User not found.' });
 
     user.warningCount = 0;
-    user.warningLevel = 'clean';
     await user.save();
 
     res.json({ message: 'Warning reset successfully.', user });
