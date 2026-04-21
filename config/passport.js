@@ -23,7 +23,7 @@ passport.use(new GoogleStrategy({
     }
 
     // New user
-    if (email.endsWith('@bitsathy.ac.in')) {
+    if (email.endsWith('@ocrs.edu')) {
       // College email — auto detect role
       const localPart = email.split('@')[0];
       const role = localPart.includes('.') ? 'student' : 'reporter';

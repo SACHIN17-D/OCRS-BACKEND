@@ -13,14 +13,15 @@ const seedUsers = async () => {
   const users = [
     {
       name: 'Dr. HOD CSE',
-      email: 'hod.cse@bitsathy.ac.in',
-      password: 'hod123',
+      email: 'hod.cse@ocrs.edu',
+      password: 'password123',
       role: 'hod',
       department: 'CSE',
+      isActive: true,
     },
     {
       name: 'Principal',
-      email: 'principal@bitsathy.ac.in',
+      email: 'principal@ocrs.edu',
       password: 'principal123',
       role: 'principal',
       department: 'Administration',

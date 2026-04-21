@@ -46,7 +46,7 @@ const sendReportFiledEmail = async ({
             <tr>
               <td style="background:linear-gradient(135deg,#0a1f3c,#0d2a4a);padding:32px 40px;border-bottom:1px solid rgba(0,210,255,0.1);">
                 <h1 style="margin:0 0 6px;font-size:22px;font-weight:700;color:#e8f4ff;">
-                  📋 OCRS — BITSathy
+                  📋 OCRS
                 </h1>
                 <h2 style="margin:16px 0 4px;font-size:20px;font-weight:700;color:#e8f4ff;">
                   ⚠️ Disciplinary Report Filed
@@ -142,7 +142,7 @@ const sendReportFiledEmail = async ({
             <tr>
               <td style="padding:20px 40px;background:#071220;border-top:1px solid rgba(0,210,255,0.08);">
                 <p style="margin:0;font-size:11px;color:#3a5a78;text-align:center;">
-                  This is an automated message from OCRS – BITSathy Online Compliance Reporting System.<br/>
+                  This is an automated message from OCRS Online Compliance Reporting System.<br/>
                   Please do not reply to this email. For help, contact the admin.
                 </p>
               </td>
@@ -158,7 +158,7 @@ const sendReportFiledEmail = async ({
 
   try {
     await transporter.sendMail({
-      from: `"OCRS BITSathy" <${process.env.EMAIL_USER}>`,
+      from: `"OCRS" <${process.env.EMAIL_USER}>`,
       to: studentEmail,
       subject: `⚠️ Disciplinary Report Filed — ${reportId}`,
       html,

@@ -28,7 +28,7 @@ router.post('/register-student', async (req, res) => {
       return res.status(400).json({ message: 'All fields are required.' });
     }
 
-    if (!email.endsWith('@bitsathy.ac.in')) {
+    if (!email.endsWith('@ocrs.edu')) {
       return res.status(400).json({ message: 'Only college emails allowed.' });
     }
 
